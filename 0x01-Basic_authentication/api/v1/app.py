@@ -12,12 +12,26 @@ import os
 app = Flask(__name__)
 app.register_blueprint(app_views)
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
+auth = None
+AUTH_TYPE = getenv("AUTH_TYPE")
+if AUTH_TYPE == 'auth':
+    from api.v1.auth.auth import Auth
+    auth = Auth()
+elif AUTH_TYPE == 'basic_auth':
+    from api.v1.auth.basic_auth import BasicAuth
+    auth = BasicAuth()
 
 
 @app.errorhandler(401)
 def unauthorized(error) -> str:
-    """ error handler for unauthorized (401) status code"""
+    """ error handler for (unauthorized) 401 status code """
     return jsonify({"error": "Unauthorized"}), 401
+
+
+@app.errorhandler(403)
+def forbidden(error) -> str:
+    """ error handler for (forbidden) 403 status code """
+    return jsonify({"error": "Forbidden"}), 403
 
 
 @app.errorhandler(404)
@@ -32,10 +46,10 @@ def before_request() -> str:
     """ method for handler before request """
     if auth is None:
         return
-    exclude_paths = ['/api/v1/status/',
-                     '/api/v1/unauthorized/',
-                     '/api/v1/forbidden/']
-    if not auth.require_auth(request.path, exclude_paths):
+    excluded_paths = ['/api/v1/status/',
+                      '/api/v1/unauthorized/',
+                      '/api/v1/forbidden/']
+    if not auth.require_auth(request.path, excluded_paths):
         return
     if auth.authorization_header(request) is None:
         abort(401)
