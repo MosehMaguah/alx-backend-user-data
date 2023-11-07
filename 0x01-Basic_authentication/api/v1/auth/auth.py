@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-""" class to manage the API authentication """
-
+""" Auth class, Require auth with stars """
 from flask import request
+from typing import List, TypeVar
 
 
 class Auth():
-    """ manages the API authentication """
+    """ manage the API authentication """
     def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
         """ require authorithation """
         if path is None or excluded_paths is None or not len(excluded_paths):
